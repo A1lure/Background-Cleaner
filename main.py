@@ -21,7 +21,7 @@ SUPPORTED_MODELS = {"u2netp", "silueta", "u2net", "isnet-general-use"}
 MAX_FILE_SIZE = 15 * 1024 * 1024
 MAX_IMAGE_PIXELS = 20_000_000
 READ_CHUNK_SIZE = 1024 * 1024
-MAX_CONCURRENT_INFERENCE = 1
+MAX_CONCURRENT_INFERENCE = 2 # ONNX Runtime на CPU при 3–4 параллельных инференсах они начнут драться за ядра и выигрыш сойдёт на ноль.
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 inference_semaphore = asyncio.Semaphore(MAX_CONCURRENT_INFERENCE)
 
@@ -41,7 +41,7 @@ app.state.limiter = limiter
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
         status_code=429,
-        content={"detail": f"Слишком много запросов. Лимит: {exc.limit}"}
+        content={"detail": f"Слишком много запросов. Лимит: {exc.detail}"}
     )
 
 
@@ -55,8 +55,8 @@ def get_session(model_name: str = MODEL_NAME):
         from rembg import new_session  # type: ignore[import-untyped]
     except ImportError as exc:
         raise RuntimeError(
-            "Не установлена зависимость rembg. "
-            "Выполните: pip install -r requirements.txt"
+            "Не установлена зависимость rembg."
+            "Выполните: pip install -r requirements/requirements-base.txt"
         ) from exc
 
     return new_session(model_name)
@@ -75,7 +75,7 @@ def remove_background_bytes(
         from PIL import Image
         from rembg import remove
     except ImportError as exc:
-        raise RuntimeError("Не установлены ML-зависимости. Выполните: pip install -r requirements\requirements-base.txt") from exc
+        raise RuntimeError("Не установлены ML-зависимости. Выполните: pip install -r requirements/requirements-base.txt ") from exc
 
     try:
         with Image.open(io.BytesIO(image_bytes)) as image:
@@ -110,6 +110,7 @@ def health() -> dict[str, str]:
 @app.post("/api/remove-background")
 @limiter.limit("10/minute")
 async def remove_background(
+    request: Request,
     file: UploadFile = File(...),
     model_name: str = Form(MODEL_NAME),
     alpha_matting: bool = Form(False),
