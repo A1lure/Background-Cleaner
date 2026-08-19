@@ -6,10 +6,14 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 
 MODEL_NAME = "u2net"
@@ -28,6 +32,19 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
+
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": f"Слишком много запросов. Лимит: {exc.limit}"}
+    )
+
+
 
 logger = logging.getLogger("background-removal")
 
@@ -91,6 +108,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/api/remove-background")
+@limiter.limit("10/minute")
 async def remove_background(
     file: UploadFile = File(...),
     model_name: str = Form(MODEL_NAME),
