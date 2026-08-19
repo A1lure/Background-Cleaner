@@ -76,3 +76,13 @@ python benchmark/run_benchmark.py --models u2netp silueta u2net isnet-general-us
 pip install -r requirements-dev.txt
 pytest
 ```
+
+### Интерфейс
+
+![Интерфейс сервиса](screen/ui.png)
+
+### Результат удаления фона
+
+| Исходное изображение | Результат |
+|:---:|:---:|
+| ![Исходное изображение](screen/example.jpg) | ![Результат удаления фона](screen/example_ready.png) |
