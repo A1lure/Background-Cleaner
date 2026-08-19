@@ -1,0 +1,277 @@
+{
+  "benchmark_date": "2026-08-19",
+  "environment": {
+    "python": "3.13.2",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel"
+  },
+  "notes": "No ground-truth masks were provided, so this benchmark reports inference time and alpha-mask statistics, not IoU/MAE.",
+  "samples": [
+    {
+      "name": "photo_1_desk",
+      "path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\images\\photo_1_desk.webp",
+      "sha256": "3f5284779667c32b125ec36154d7586e4611f5c93c3b51521b73d1768e9228da",
+      "width": 626,
+      "height": 418,
+      "format": "WEBP"
+    },
+    {
+      "name": "photo_2_vegetables",
+      "path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\images\\photo_2_vegetables.jpg",
+      "sha256": "c9959df5eb49c9edac6e4d671da164ec38a240c8e7b6c9880c27245a1541c549",
+      "width": 1000,
+      "height": 1500,
+      "format": "JPEG"
+    },
+    {
+      "name": "photo_3_portrait_full",
+      "path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\images\\photo_3_portrait_full.jpg",
+      "sha256": "7c53ab227e04f72395667bd7caea95bdb2b799de39825cd6ee018eb23be1b0f1",
+      "width": 736,
+      "height": 1104,
+      "format": "JPEG"
+    },
+    {
+      "name": "photo_4_neon_scene",
+      "path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\images\\photo_4_neon_scene.jpg",
+      "sha256": "50df5579b9f6ed87e5b123cec8afb9832622e6df700eb3a2587a932631b0413f",
+      "width": 1391,
+      "height": 735,
+      "format": "JPEG"
+    },
+    {
+      "name": "photo_5_portrait_close",
+      "path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\images\\photo_5_portrait_close.webp",
+      "sha256": "ac696c02163f36583a3408a2377efb8a763f56070c3080e8501c032655ed5d91",
+      "width": 800,
+      "height": 1160,
+      "format": "WEBP"
+    }
+  ],
+  "models": {
+    "u2netp": {
+      "load_s": 0.12,
+      "samples": {
+        "photo_1_desk": {
+          "inference_s": 0.218,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_1_desk.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_1_desk_preview.jpg",
+          "output_kb": 229.0,
+          "foreground_ratio": 0.3106,
+          "transparent_ratio": 0.5723,
+          "soft_alpha_ratio": 0.481,
+          "mean_alpha": 77.76
+        },
+        "photo_2_vegetables": {
+          "inference_s": 0.338,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_2_vegetables.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_2_vegetables_preview.jpg",
+          "output_kb": 862.9,
+          "foreground_ratio": 0.0713,
+          "transparent_ratio": 0.6653,
+          "soft_alpha_ratio": 0.6408,
+          "mean_alpha": 31.52
+        },
+        "photo_3_portrait_full": {
+          "inference_s": 0.212,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_3_portrait_full.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_3_portrait_full_preview.jpg",
+          "output_kb": 520.9,
+          "foreground_ratio": 0.3683,
+          "transparent_ratio": 0.6165,
+          "soft_alpha_ratio": 0.4021,
+          "mean_alpha": 93.56
+        },
+        "photo_4_neon_scene": {
+          "inference_s": 0.215,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_4_neon_scene.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_4_neon_scene_preview.jpg",
+          "output_kb": 344.0,
+          "foreground_ratio": 0.1284,
+          "transparent_ratio": 0.8231,
+          "soft_alpha_ratio": 0.2146,
+          "mean_alpha": 34.58
+        },
+        "photo_5_portrait_close": {
+          "inference_s": 0.269,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_5_portrait_close.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2netp_photo_5_portrait_close_preview.jpg",
+          "output_kb": 1232.7,
+          "foreground_ratio": 0.7191,
+          "transparent_ratio": 0.2446,
+          "soft_alpha_ratio": 0.7735,
+          "mean_alpha": 183.33
+        }
+      },
+      "avg_inference_s": 0.25
+    },
+    "silueta": {
+      "load_s": 0.567,
+      "samples": {
+        "photo_1_desk": {
+          "inference_s": 0.553,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_1_desk.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_1_desk_preview.jpg",
+          "output_kb": 226.9,
+          "foreground_ratio": 0.3555,
+          "transparent_ratio": 0.6184,
+          "soft_alpha_ratio": 0.456,
+          "mean_alpha": 83.15
+        },
+        "photo_2_vegetables": {
+          "inference_s": 0.584,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_2_vegetables.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_2_vegetables_preview.jpg",
+          "output_kb": 629.3,
+          "foreground_ratio": 0.1694,
+          "transparent_ratio": 0.8017,
+          "soft_alpha_ratio": 0.3537,
+          "mean_alpha": 38.87
+        },
+        "photo_3_portrait_full": {
+          "inference_s": 0.547,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_3_portrait_full.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_3_portrait_full_preview.jpg",
+          "output_kb": 516.0,
+          "foreground_ratio": 0.3646,
+          "transparent_ratio": 0.6221,
+          "soft_alpha_ratio": 0.3926,
+          "mean_alpha": 92.47
+        },
+        "photo_4_neon_scene": {
+          "inference_s": 0.53,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_4_neon_scene.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_4_neon_scene_preview.jpg",
+          "output_kb": 572.3,
+          "foreground_ratio": 0.2915,
+          "transparent_ratio": 0.6715,
+          "soft_alpha_ratio": 0.4181,
+          "mean_alpha": 70.5
+        },
+        "photo_5_portrait_close": {
+          "inference_s": 0.588,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_5_portrait_close.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\silueta_photo_5_portrait_close_preview.jpg",
+          "output_kb": 1255.6,
+          "foreground_ratio": 0.6741,
+          "transparent_ratio": 0.2946,
+          "soft_alpha_ratio": 0.7565,
+          "mean_alpha": 166.21
+        }
+      },
+      "avg_inference_s": 0.56
+    },
+    "u2net": {
+      "load_s": 0.86,
+      "samples": {
+        "photo_1_desk": {
+          "inference_s": 0.382,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_1_desk.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_1_desk_preview.jpg",
+          "output_kb": 194.5,
+          "foreground_ratio": 0.3564,
+          "transparent_ratio": 0.6196,
+          "soft_alpha_ratio": 0.4367,
+          "mean_alpha": 88.23
+        },
+        "photo_2_vegetables": {
+          "inference_s": 1.047,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_2_vegetables.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_2_vegetables_preview.jpg",
+          "output_kb": 618.4,
+          "foreground_ratio": 0.1859,
+          "transparent_ratio": 0.8007,
+          "soft_alpha_ratio": 0.3698,
+          "mean_alpha": 43.89
+        },
+        "photo_3_portrait_full": {
+          "inference_s": 2.038,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_3_portrait_full.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_3_portrait_full_preview.jpg",
+          "output_kb": 515.4,
+          "foreground_ratio": 0.37,
+          "transparent_ratio": 0.6192,
+          "soft_alpha_ratio": 0.3817,
+          "mean_alpha": 93.92
+        },
+        "photo_4_neon_scene": {
+          "inference_s": 2.151,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_4_neon_scene.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_4_neon_scene_preview.jpg",
+          "output_kb": 548.7,
+          "foreground_ratio": 0.3072,
+          "transparent_ratio": 0.659,
+          "soft_alpha_ratio": 0.426,
+          "mean_alpha": 77.43
+        },
+        "photo_5_portrait_close": {
+          "inference_s": 2.573,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_5_portrait_close.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\u2net_photo_5_portrait_close_preview.jpg",
+          "output_kb": 1218.1,
+          "foreground_ratio": 0.6803,
+          "transparent_ratio": 0.2849,
+          "soft_alpha_ratio": 0.7238,
+          "mean_alpha": 170.77
+        }
+      },
+      "avg_inference_s": 1.638
+    },
+    "isnet-general-use": {
+      "load_s": 1.565,
+      "samples": {
+        "photo_1_desk": {
+          "inference_s": 3.966,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_1_desk.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_1_desk_preview.jpg",
+          "output_kb": 187.6,
+          "foreground_ratio": 0.1439,
+          "transparent_ratio": 0.8065,
+          "soft_alpha_ratio": 0.2989,
+          "mean_alpha": 35.69
+        },
+        "photo_2_vegetables": {
+          "inference_s": 3.092,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_2_vegetables.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_2_vegetables_preview.jpg",
+          "output_kb": 775.4,
+          "foreground_ratio": 0.0162,
+          "transparent_ratio": 0.6999,
+          "soft_alpha_ratio": 0.5374,
+          "mean_alpha": 17.02
+        },
+        "photo_3_portrait_full": {
+          "inference_s": 2.407,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_3_portrait_full.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_3_portrait_full_preview.jpg",
+          "output_kb": 522.8,
+          "foreground_ratio": 0.3686,
+          "transparent_ratio": 0.6172,
+          "soft_alpha_ratio": 0.3987,
+          "mean_alpha": 93.75
+        },
+        "photo_4_neon_scene": {
+          "inference_s": 4.731,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_4_neon_scene.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_4_neon_scene_preview.jpg",
+          "output_kb": 791.6,
+          "foreground_ratio": 0.3487,
+          "transparent_ratio": 0.5053,
+          "soft_alpha_ratio": 0.5385,
+          "mean_alpha": 89.79
+        },
+        "photo_5_portrait_close": {
+          "inference_s": 4.462,
+          "output_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_5_portrait_close.png",
+          "preview_path": "C:\\Users\\user\\Desktop\\SOTA\\benchmark\\results\\current\\isnet-general-use_photo_5_portrait_close_preview.jpg",
+          "output_kb": 1231.9,
+          "foreground_ratio": 0.7115,
+          "transparent_ratio": 0.2674,
+          "soft_alpha_ratio": 0.7537,
+          "mean_alpha": 180.82
+        }
+      },
+      "avg_inference_s": 3.732
+    }
+  }
+}

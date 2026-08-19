@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#07070a">
+    <title>Cleaner - Удаление фона</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Главная Cleaner"><span class="brand-mark" aria-hidden="true">C</span><span class="brand-name">Cleaner</span></a>
+        <div class="header-status"><span id="service-dot" class="status-dot"></span><span id="service-status">Проверяем сервис</span></div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="page-title">
+          <div><p class="eyebrow">УДАЛЕНИЕ ФОНА <span class="eyebrow-line"></span></p><h1 id="page-title">Удалите фон.<br><span>Получите чистый результат.</span></h1><p class="hero-copy">Выберите модель, проверьте результат и скачайте изображение с прозрачным фоном.</p></div>
+          <div class="hero-note"><span class="hero-note-label">ЛОКАЛЬНАЯ ОБРАБОТКА</span><strong>Прозрачный PNG</strong><span>Четыре модели для обработки на CPU</span></div>
+        </section>
+
+        <section class="studio" aria-label="Рабочая область удаления фона">
+          <div class="studio-bar"><div class="steps" aria-label="Этапы работы"><span class="step active"><b>01</b> Загрузка</span><span class="step-divider"></span><span class="step"><b>02</b> Выбор модели</span><span class="step-divider"></span><span class="step"><b>03</b> Скачивание</span></div><span class="limit-label">JPEG / PNG / WEBP / BMP <b>до 15 МБ</b></span></div>
+
+          <div class="studio-grid">
+            <section class="panel upload-panel" aria-labelledby="original-title">
+              <div class="panel-heading"><div><span class="panel-kicker">ИСХОДНОЕ ИЗОБРАЖЕНИЕ</span><h2 id="original-title">Оригинал</h2></div><button id="reset-button" class="icon-button" type="button" title="Сбросить рабочую область">Сбросить</button></div>
+              <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-describedby="upload-help">
+                <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" hidden>
+                <div id="upload-empty" class="upload-empty"><span class="upload-symbol" aria-hidden="true">+</span><strong>Перетащите изображение сюда</strong><span id="upload-help">или нажмите, чтобы выбрать файл</span><small>PNG, JPG, JPEG, WEBP · до 15 МБ</small></div>
+                <img id="source-image" class="source-image" alt="Выбранное исходное изображение" hidden>
+              </div>
+              <div class="upload-footer"><span id="file-name" class="file-name">Файл не выбран</span><span id="source-resolution" class="muted">-</span></div>
+              <div class="sample-block"><div class="sample-heading"><span>Попробовать пример</span><span class="muted">4 примера</span></div><div class="sample-grid" aria-label="Примеры изображений">
+                <button class="sample-button" type="button" data-sample="/samples/photo_1_desk.webp" data-name="sample-desk.webp" aria-label="Выбрать пример с рабочим столом"><img src="/samples/photo_1_desk.webp" alt="Рабочий стол"></button>
+                <button class="sample-button" type="button" data-sample="/samples/photo_2_vegetables.jpg" data-name="sample-vegetables.jpg" aria-label="Выбрать пример с овощами"><img src="/samples/photo_2_vegetables.jpg" alt="Овощи"></button>
+                <button class="sample-button" type="button" data-sample="/samples/photo_3_portrait_full.jpg" data-name="sample-portrait.jpg" aria-label="Выбрать пример с портретом"><img src="/samples/photo_3_portrait_full.jpg" alt="Портрет"></button>
+                <button class="sample-button" type="button" data-sample="/samples/photo_4_neon_scene.jpg" data-name="sample-neon.jpg" aria-label="Выбрать пример с неоновой сценой"><img src="/samples/photo_4_neon_scene.jpg" alt="Неоновая сцена"></button>
+              </div></div>
+            </section>
+
+            <section class="panel preview-panel" aria-labelledby="preview-title">
+              <div class="panel-heading"><div><span class="panel-kicker">ПРЕДПРОСМОТР</span><h2 id="preview-title">Результат</h2></div><span id="preview-state" class="state-pill">Нет результата</span></div>
+              <div id="preview-frame" class="preview-frame">
+                <div id="preview-empty" class="preview-empty"><span class="preview-symbol" aria-hidden="true">+</span><strong>Загрузите изображение</strong><span>Перед обработкой выберите модель.</span></div>
+                <div id="preview-processing" class="preview-processing" hidden><div class="processing-orbit" aria-hidden="true"><span></span></div><strong id="processing-label">Удаляем фон...</strong><span id="processing-model">Модель: U2Net</span><div class="progress-track"><span id="progress-bar"></span></div><span id="processing-status">Подготавливаем изображение...</span></div>
+                <div id="result-canvas" class="result-canvas" hidden><img id="preview-result" class="preview-image" alt="Результат удаления фона"></div>
+              </div>
+              <div class="preview-controls"><span class="preview-mode">Готовый результат</span><div class="zoom-controls" role="group" aria-label="Масштаб предпросмотра"><button class="view-button active" data-view="fit" type="button">Вписать</button><button class="view-button" data-view="100" type="button">100%</button></div></div>
+              <div id="result-info" class="result-info" hidden><div><span>МОДЕЛЬ</span><strong id="result-model">U2Net</strong></div><div><span>ВРЕМЯ</span><strong id="result-time">-</strong></div><div><span>РАЗМЕР</span><strong id="result-resolution">-</strong></div></div>
+              <div id="result-actions" class="result-actions" hidden><button id="download-png" class="download-main" type="button">Скачать PNG</button><div><button id="download-webp" class="download-option" type="button">WebP</button><button id="download-jpg" class="download-option" type="button">JPG</button><button id="compare-results-button" class="download-option" type="button">Сравнить результаты</button><button id="try-another-button" class="download-option" type="button">Попробовать другую модель</button></div></div>
+            </section>
+
+            <aside id="models" class="panel model-panel" aria-labelledby="models-title">
+              <div class="panel-heading model-heading"><div><span class="panel-kicker">МОДЕЛЬ ОБРАБОТКИ</span><h2 id="models-title">Выберите модель</h2></div><button id="model-compare-button" class="text-button" type="button">Сравнить</button></div>
+              <div id="model-list" class="model-list">
+                <button class="model-card selected" type="button" data-model="u2net"><span class="model-card-top"><span class="model-name">U2Net</span><span class="checkmark">✓</span></span><span class="model-description">Сбалансированное удаление фона для разных сцен и портретов.</span><span class="model-tags"><i class="tag recommended">РЕКОМЕНДОВАНО</i><i class="tag">БАЛАНС</i></span><span class="model-stats"><span>Качество <b style="--value: 82%"></b></span><span>Скорость <b style="--value: 62%"></b></span><span>CPU в среднем <em>2.17 с</em></span></span></button>
+                <button class="model-card" type="button" data-model="u2netp"><span class="model-card-top"><span class="model-name">U2NetP</span><span class="checkmark">✓</span></span><span class="model-description">Легкая модель для быстрых предварительных результатов.</span><span class="model-tags"><i class="tag">САМАЯ БЫСТРАЯ</i><i class="tag">ЛЕГКАЯ</i></span><span class="model-stats"><span>Качество <b style="--value: 66%"></b></span><span>Скорость <b style="--value: 96%"></b></span><span>CPU в среднем <em>0.26 с</em></span></span></button>
+                <button class="model-card" type="button" data-model="silueta"><span class="model-card-top"><span class="model-name">Silueta</span><span class="checkmark">✓</span></span><span class="model-description">Аккуратная модель для четко очерченных объектов.</span><span class="model-tags"><i class="tag">АККУРАТНАЯ</i><i class="tag">ДЕТАЛИ</i></span><span class="model-stats"><span>Качество <b style="--value: 76%"></b></span><span>Скорость <b style="--value: 38%"></b></span><span>CPU в среднем <em>3.21 с</em></span></span></button>
+                <button class="model-card" type="button" data-model="isnet-general-use"><span class="model-card-top"><span class="model-name">IS-Net</span><span class="checkmark">✓</span></span><span class="model-description">Точная сегментация портретов с четкими границами объекта.</span><span class="model-tags"><i class="tag">ПОРТРЕТЫ</i><i class="tag">ДЕТАЛИ</i></span><span class="model-stats"><span>Качество <b style="--value: 78%"></b></span><span>Скорость <b style="--value: 30%"></b></span><span>CPU в среднем <em>4.35 с</em></span></span></button>
+              </div>
+              <details class="advanced-settings"><summary><span>Дополнительные настройки</span><span class="summary-plus">+</span></summary><div class="settings-body">
+                <label class="toggle-row"><span><strong>Уточнение прозрачности</strong><small>Для мягких краев</small></span><input id="alpha-matting" type="checkbox"><i></i></label>
+                <label class="toggle-row"><span><strong>Очистка маски</strong><small>Убирает мелкие артефакты</small></span><input id="post-process" type="checkbox"><i></i></label>
+                <label class="range-row"><span><strong>Порог переднего плана</strong><output id="foreground-value">240</output></span><input id="foreground-threshold" type="range" min="0" max="255" value="240"></label>
+                <label class="range-row"><span><strong>Порог фона</strong><output id="background-value">10</output></span><input id="background-threshold" type="range" min="0" max="255" value="10"></label>
+              </div></details>
+              <div class="model-action"><button id="remove-button" class="primary-button" type="button" disabled><span>Обработать: U2Net</span><b>→</b></button><p id="message" class="message" role="status" aria-live="polite"></p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="compare-results" class="comparison-section" hidden aria-labelledby="comparison-title"><div class="section-heading"><div><span class="panel-kicker">СРАВНЕНИЕ</span><h2 id="comparison-title">Сравнить результаты</h2></div><span id="comparison-status" class="muted"></span></div><div id="comparison-grid" class="comparison-grid"></div></section>
+      </main>
+    </div>
+
+    <dialog id="model-modal" class="modal"><div class="modal-header"><div><span class="panel-kicker">СРАВНЕНИЕ МОДЕЛЕЙ</span><h2>Доступные модели</h2></div><button class="modal-close" data-close="model-modal" type="button" aria-label="Закрыть">×</button></div><div class="table-wrap"><table><thead><tr><th>Модель</th><th>CPU в среднем</th><th>Профиль</th><th>Подходит для</th></tr></thead><tbody><tr><td>U2Net</td><td>2.17 с</td><td>Баланс</td><td>Разные сцены</td></tr><tr><td>U2NetP</td><td>0.26 с</td><td>Самая быстрая</td><td>Быстрый просмотр</td></tr><tr><td>Silueta</td><td>3.21 с</td><td>Аккуратная</td><td>Четкие объекты</td></tr><tr><td>IS-Net</td><td>4.35 с</td><td>Детали</td><td>Портреты</td></tr></tbody></table></div><p class="modal-note">Измерено на текущем бенчмарке из пяти изображений на CPU. Эталонных масок нет.</p></dialog>
+    <dialog id="results-modal" class="modal results-modal"><div class="modal-header"><div><span class="panel-kicker">ЗАПУСК НЕСКОЛЬКИХ МОДЕЛЕЙ</span><h2>Сравнить результаты</h2></div><button class="modal-close" data-close="results-modal" type="button" aria-label="Закрыть">×</button></div><p class="modal-copy">Выберите от 2 до 4 моделей. Одно изображение будет обработано каждой выбранной моделью.</p><div id="compare-options" class="compare-options"></div><div class="modal-actions"><button class="secondary-button" data-close="results-modal" type="button">Отмена</button><button id="run-comparison-button" class="primary-button" type="button">Запустить сравнение <b>→</b></button></div></dialog>
+    <script src="/app.js"></script>
+  </body>
+</html>

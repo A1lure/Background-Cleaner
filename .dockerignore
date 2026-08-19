@@ -1,0 +1,11 @@
+.venv
+.git
+.gitignore
+.github
+.pytest_cache
+.mypy_cache
+__pycache__
+*.pyc
+.playwright-cli
+user_image_results
+service_result.png
