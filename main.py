@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import io
+import gc
 import logging
+
 from functools import lru_cache
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
@@ -15,15 +18,25 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+from rembg import new_session, remove # type: ignore
+from PIL import Image, ImageOps
 
 MODEL_NAME = "u2net"
 SUPPORTED_MODELS = {"u2netp", "silueta", "u2net", "isnet-general-use"}
 MAX_FILE_SIZE = 15 * 1024 * 1024
 MAX_IMAGE_PIXELS = 20_000_000
 READ_CHUNK_SIZE = 1024 * 1024
-MAX_CONCURRENT_INFERENCE = 2 # ONNX Runtime на CPU при 3–4 параллельных инференсах они начнут драться за ядра и выигрыш сойдёт на ноль.
+MAX_CONCURRENT_INFERENCE = 1 
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 inference_semaphore = asyncio.Semaphore(MAX_CONCURRENT_INFERENCE)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    get_session(MODEL_NAME)
+    logger.info("Model preloaded successfully.")
+    yield
+
 
 app = FastAPI(
     title="Background Removal Service",
@@ -31,6 +44,7 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
+    lifespan=lifespan,
 )
 
 
@@ -51,14 +65,6 @@ logger = logging.getLogger("background-removal")
 
 @lru_cache(maxsize=len(SUPPORTED_MODELS))
 def get_session(model_name: str = MODEL_NAME):
-    try:
-        from rembg import new_session  # type: ignore[import-untyped]
-    except ImportError as exc:
-        raise RuntimeError(
-            "Не установлена зависимость rembg."
-            "Выполните: pip install -r requirements/requirements-base.txt"
-        ) from exc
-
     return new_session(model_name)
 
 
@@ -71,24 +77,26 @@ def remove_background_bytes(
     background_threshold: int = 10,
     post_process_mask: bool = False,
 ) -> bytes:
-    try:
-        from PIL import Image
-        from rembg import remove
-    except ImportError as exc:
-        raise RuntimeError("Не установлены ML-зависимости. Выполните: pip install -r requirements/requirements-base.txt ") from exc
-
+    
     try:
         with Image.open(io.BytesIO(image_bytes)) as image:
-            width, height = image.size
-            image.verify()
+            if image.width * image.height > MAX_IMAGE_PIXELS:
+                raise ValueError("Разрешение изображения слишком большое")
+            
+            image = ImageOps.exif_transpose(image) # type: ignore
+
+            if image.mode in ("RGBA", "P"):
+                image = image.convert("RGB") # type: ignore
+            
+            clean_buffer = io.BytesIO()
+            image.save(clean_buffer, format="PNG")
+            clean_bytes = clean_buffer.getvalue()
+            
     except Exception as exc:
         raise ValueError("Файл не является корректным изображением") from exc
 
-    if width * height > MAX_IMAGE_PIXELS:
-        raise ValueError("Разрешение изображения слишком большое")
-
     result = remove(
-        image_bytes,
+        clean_bytes, # передаем очищенные байты
         alpha_matting=alpha_matting,
         alpha_matting_foreground_threshold=foreground_threshold,
         alpha_matting_background_threshold=background_threshold,
