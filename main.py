@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import asyncio
 import io
 import gc
@@ -9,13 +10,13 @@ from functools import lru_cache
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status, Depends
+from fastapi.security import APIKeyHeader
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
@@ -33,16 +34,33 @@ inference_semaphore = asyncio.Semaphore(MAX_CONCURRENT_INFERENCE)
 
 
 logger = logging.getLogger("background-removal")
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def verify_api_key(api_key: str | None = Depends(api_key_header)):
+    # Проверка API ключа
+    expected_key = os.getenv("API_KEY")
+    if expected_key and api_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Invalid API Key"
+        )
+    return api_key
 
 def get_client_ip(request: Request) -> str:
     # Получение реального IP клиента
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    forward = request.headers.get("X-Forwarded-For")
+    if forward:
+        return forward.split(",")[0].strip()
+    
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
+        
     return request.client.host if request.client else "127.0.0.1"
 
 def check_image_signature(data: bytes) -> bool:
-    # Проверка магических байтов (сигнатур) для защиты от подделки Content-Type.
+    # Проверка сигнатур
     if data.startswith(b'\xff\xd8\xff'): return True  # JPEG
     if data.startswith(b'\x89PNG'): return True       # PNG
     if data.startswith(b'BM'): return True            # BMP
@@ -51,8 +69,10 @@ def check_image_signature(data: bytes) -> bool:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    
     get_session(MODEL_NAME)
-    logger.info("Model preloaded successfully.")
+    logger.info("Модель загружена")
+    
     yield
 
 
@@ -72,10 +92,11 @@ app.add_middleware(SlowAPIMiddleware)
 limiter = Limiter(key_func=get_client_ip)
 app.state.limiter = limiter
 
+
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
-        status_code=429,
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content={"detail": f"Слишком много запросов. Лимит: {exc.detail}"}
     )
 
@@ -94,23 +115,28 @@ def remove_background_bytes(
     background_threshold: int = 10,
     post_process_mask: bool = False,
 ) -> bytes:
-    
     try:
         image = Image.open(io.BytesIO(image_bytes))
         image.load() 
         
         if image.width * image.height > MAX_IMAGE_PIXELS:
-            raise ValueError("Разрешение изображения слишком большое")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Разрешение изображения слишком большое"
+            )
         
         image = ImageOps.exif_transpose(image) # type: ignore
 
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGB") # type: ignore
             
-    except ValueError:
+    except HTTPException:
         raise 
     except Exception as exc:
-        raise ValueError("Файл не является корректным изображением") from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Файл не является корректным изображением"
+        ) from exc
 
 
     result = remove(
@@ -129,7 +155,10 @@ def remove_background_bytes(
     elif isinstance(result, bytes):
         return result
     
-    raise TypeError(f"Unexpected result type from rembg: {type(result)!r}")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+        detail=f"Неожиданный тип данных: {type(result)!r}"
+    )
 
 
 @app.get("/api/health")
@@ -137,7 +166,7 @@ def health() -> dict[str, str]:
     return {"status": "ok", "model": MODEL_NAME}
 
 
-@app.post("/api/remove-background")
+@app.post("/api/remove-background", dependencies=[Depends(verify_api_key)])
 @limiter.limit("10/minute")
 async def remove_background(
     request: Request,
@@ -149,29 +178,53 @@ async def remove_background(
     post_process_mask: bool = Form(False),
 ) -> Response:
     if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(status_code=415, detail="Поддерживаются только JPEG, PNG, WEBP и BMP")
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, 
+            detail="Поддерживаются только JPEG, PNG, WEBP и BMP"
+        )
 
     if model_name not in SUPPORTED_MODELS:
-        raise HTTPException(status_code=400, detail="Выбрана неподдерживаемая модель")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Выбрана неподдерживаемая модель"
+        )
 
     if not 0 <= foreground_threshold <= 255 or not 0 <= background_threshold <= 255:
-        raise HTTPException(status_code=400, detail="Пороги должны быть в диапазоне от 0 до 255")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Пороги должны быть в диапазоне от 0 до 255"
+        )
 
     buffer = io.BytesIO()
     size = 0
-
+    signature_checked = False
+    
     while chunk := await file.read(READ_CHUNK_SIZE):
+        if not signature_checked:
+            if not check_image_signature(chunk):
+                raise HTTPException(
+                    status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, 
+                    detail="Сигнатура файла не соответствует изображению"
+                )
+            signature_checked = True
+            
         size += len(chunk)
         if size > MAX_FILE_SIZE:
-            raise HTTPException(status_code=413, detail="Файл больше 15 MB")
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, 
+                detail="Файл больше 15 MB"
+            )
         buffer.write(chunk)
 
     image_bytes = buffer.getvalue()
 
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="Файл пуст")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Файл пуст"
+        )
 
-# ML-инференс ограничен одним запуском на процесс, чтобы входящие запросы не конкурировали за память во время выполнения ONNX-модели.
+    # ML-инференс ограничен одним запуском на процесс, чтобы входящие запросы не конкурировали за память во время выполнения ONNX-модели.
     try:
         async with inference_semaphore:
             result = await run_in_threadpool(
@@ -183,13 +236,20 @@ async def remove_background(
                 background_threshold=background_threshold,
                 post_process_mask=post_process_mask,
             )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except HTTPException:
+        raise
     except Exception as exc:
-        logger.exception("Background removal failed")
-        raise HTTPException(status_code=500, detail="Ошибка обработки изображения") from exc
+        logger.exception(
+            f"Ошибка очистки | IP: {get_client_ip(request)} | "
+            f"File: {file.filename} | Size: {size} bytes | Model: {model_name}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Внутренняя ошибка сервера при обработке изображения"
+        ) from exc
 
     return Response(content=result, media_type="image/png")
+
 
 
 app.mount(
