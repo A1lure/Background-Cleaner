@@ -17,6 +17,7 @@ from starlette.concurrency import run_in_threadpool
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from rembg import new_session, remove # type: ignore
 from PIL import Image, ImageOps
@@ -30,6 +31,23 @@ MAX_CONCURRENT_INFERENCE = 1
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 inference_semaphore = asyncio.Semaphore(MAX_CONCURRENT_INFERENCE)
 
+
+logger = logging.getLogger("background-removal")
+
+def get_client_ip(request: Request) -> str:
+    # Получение реального IP клиента
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+def check_image_signature(data: bytes) -> bool:
+    # Проверка магических байтов (сигнатур) для защиты от подделки Content-Type.
+    if data.startswith(b'\xff\xd8\xff'): return True  # JPEG
+    if data.startswith(b'\x89PNG'): return True       # PNG
+    if data.startswith(b'BM'): return True            # BMP
+    if len(data) > 12 and data.startswith(b'RIFF') and data[8:12] == b'WEBP': return True
+    return False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,7 +66,10 @@ app = FastAPI(
 )
 
 
-limiter = Limiter(key_func=get_remote_address)
+app.add_middleware(SlowAPIMiddleware)
+
+
+limiter = Limiter(key_func=get_client_ip)
 app.state.limiter = limiter
 
 @app.exception_handler(RateLimitExceeded)
@@ -57,10 +78,6 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         status_code=429,
         content={"detail": f"Слишком много запросов. Лимит: {exc.detail}"}
     )
-
-
-
-logger = logging.getLogger("background-removal")
 
 
 @lru_cache(maxsize=len(SUPPORTED_MODELS))
@@ -79,24 +96,25 @@ def remove_background_bytes(
 ) -> bytes:
     
     try:
-        with Image.open(io.BytesIO(image_bytes)) as image:
-            if image.width * image.height > MAX_IMAGE_PIXELS:
-                raise ValueError("Разрешение изображения слишком большое")
-            
-            image = ImageOps.exif_transpose(image) # type: ignore
+        image = Image.open(io.BytesIO(image_bytes))
+        image.load() 
+        
+        if image.width * image.height > MAX_IMAGE_PIXELS:
+            raise ValueError("Разрешение изображения слишком большое")
+        
+        image = ImageOps.exif_transpose(image) # type: ignore
 
-            if image.mode in ("RGBA", "P"):
-                image = image.convert("RGB") # type: ignore
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB") # type: ignore
             
-            clean_buffer = io.BytesIO()
-            image.save(clean_buffer, format="PNG")
-            clean_bytes = clean_buffer.getvalue()
-            
+    except ValueError:
+        raise 
     except Exception as exc:
         raise ValueError("Файл не является корректным изображением") from exc
 
+
     result = remove(
-        clean_bytes, # передаем очищенные байты
+        image,
         alpha_matting=alpha_matting,
         alpha_matting_foreground_threshold=foreground_threshold,
         alpha_matting_background_threshold=background_threshold,
@@ -104,10 +122,14 @@ def remove_background_bytes(
         session=get_session(model_name),
     )
 
-    if not isinstance(result, bytes):
-        raise TypeError(f"Unexpected result type from rembg: {type(result)!r}")
-
-    return result
+    if isinstance(result, Image.Image):
+        buf = io.BytesIO()
+        result.save(buf, format="PNG")
+        return buf.getvalue()
+    elif isinstance(result, bytes):
+        return result
+    
+    raise TypeError(f"Unexpected result type from rembg: {type(result)!r}")
 
 
 @app.get("/api/health")
